@@ -1,73 +1,15 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+### NestJS Batch Server
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+- **Redis 기반 분산 락 적용**
+  - Batch 서버가 다중 인스턴스로 실행되거나, Docker 기반으로 컨테이너가 수평 확장되는 환경에서 **Cron Job의 중복 실행을 방지**하기 위해 Redis 분산 락을 적용
+  - Cron 주기의 약 70% 수준으로 **락 만료 시간(TTL)** 을 설정하여, 작업 도중 중단되더라도 다음 주기 실행에 영향을 주지 않도록 설계
+    - TTL이 너무 짧으면 작업이 완료되기 전에 락이 만료되어 **중복 실행 위험**이 존재
+    - 반대로 TTL이 너무 길면, 작업 실패 후 락이 해제되지 않았을 경우 **다음 주기 실행이 지연될 수 있음**
+    - 다만, 현재 구조에서는 작업 실패 시에도 `finally` 블록을 통해 락을 명시적으로 해제하기 때문에, 일반적인 경우 TTL이 남아 있어도 락은 **즉시 해제됨**
+    - 그럼에도 불구하고 서버 다운, 네트워크 장애 등으로 `finally`가 실행되지 못하는 예외 상황에 대비해, TTL은 **백업 안전장치로 반드시 필요**
+    - 따라서 TTL을 Cron 주기의 약 70%로 설정하면, **작업 완료 보장과 장애 복구 속도 사이의 균형을 확보**할 수 있음
+  - `ioredis`와 `redlock` 라이브러리 사용
+    - `redlock`은 약 3년 전 5.0.0-beta.2 버전 이후로 업데이트는 없지만, **가장 널리 사용되는 Redis 기반 분산 락 구현체**이며 안정성이 입증되어 있어 대체 없이 사용
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
-
-```bash
-$ npm install
-```
-
-## Running the app
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Test
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+- **Graceful Shutdown 적용**

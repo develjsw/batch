@@ -13,7 +13,7 @@ export class SampleService {
     async getSampleData(): Promise<void> {
         await this.redisLockManagerService.runTaskWithLock(
             RedisLockKeyEnum.SAMPLE_JOB,
-            1000 * 10,
+            1000 * 21,
             async (): Promise<void> => {
                 console.log(await this.getSampleQuery.findSampleData());
             }

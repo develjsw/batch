@@ -5,6 +5,7 @@ import * as path from 'path';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { RedisLockModule } from './common/redis/lock/redis-lock.module';
+import { CronModule } from './cron/cron.module';
 
 let envFile: string = 'env.local';
 switch (process.env.NODE_ENV) {
@@ -24,7 +25,8 @@ switch (process.env.NODE_ENV) {
             cache: true
         }),
         PrismaModule,
-        RedisLockModule
+        RedisLockModule,
+        CronModule
     ],
     controllers: [AppController],
     providers: [AppService]

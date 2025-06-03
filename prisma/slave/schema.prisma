@@ -1,0 +1,13 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/slave-client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("BATCH_SLAVE_DATABASE_URL")
+}
+
+model test {
+  testId Int @id
+}

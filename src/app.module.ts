@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import * as path from 'path';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { RedisLockModule } from './common/redis/lock/redis-lock.module';
 
 let envFile: string = 'env.local';
 switch (process.env.NODE_ENV) {
@@ -22,7 +23,8 @@ switch (process.env.NODE_ENV) {
             isGlobal: true,
             cache: true
         }),
-        PrismaModule
+        PrismaModule,
+        RedisLockModule
     ],
     controllers: [AppController],
     providers: [AppService]

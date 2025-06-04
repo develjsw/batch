@@ -6,8 +6,8 @@ import { SampleService } from '../service/sample.service';
 export class SampleJob {
     constructor(private readonly sampleService: SampleService) {}
 
-    @Cron('*/30 * * * * *')
+    @Cron('*/10 * * * * *')
     async handleSampleCron(): Promise<void> {
-        await this.sampleService.getSampleData();
+        await this.sampleService.run();
     }
 }

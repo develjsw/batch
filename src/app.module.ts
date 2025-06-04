@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './common/prisma/prisma.module';
 import { RedisLockModule } from './common/redis/lock/redis-lock.module';
 import { CronModule } from './cron/cron.module';
+import { LifecycleModule } from './core/lifecycle/lifecycle.module';
 
 let envFile: string = 'env.local';
 switch (process.env.NODE_ENV) {
@@ -26,7 +27,8 @@ switch (process.env.NODE_ENV) {
         }),
         PrismaModule,
         RedisLockModule,
-        CronModule
+        CronModule,
+        LifecycleModule
     ],
     controllers: [AppController],
     providers: [AppService]

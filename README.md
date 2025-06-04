@@ -13,3 +13,15 @@
 
 
 - **Graceful Shutdown 적용**
+  - 배치 작업 도중 애플리케이션이 종료되더라도, 현재 실행 중인 작업을 안전하게 마무리할 수 있도록 Graceful Shutdown 로직 구현
+  - NestJS의 enableShutdownHooks() 기능을 활성화하고, ShutdownHandler를 전역 서비스로 등록하여 종료 시그널(SIGINT, SIGTERM 등) 을 감지
+  - 각 배치 서비스는 BaseBatchService를 상속하여 종료 콜백을 등록하고, 현재 실행 중인 작업(Promise)이 완료될 때까지 종료를 지연시킴
+  - 이를 통해 다음과 같은 시나리오에서도 데이터 정합성과 안정적인 종료를 보장
+    - 서버 배포로 인한 재시작
+    - 컨테이너의 수평 축소 및 제거
+    - 수동으로 서버 중지
+  - NestJS에서 기본 제공하는 onApplicationShutdown이나 onModuleDestroy만으로는 @Cron() 기반 작업의 정상 종료를 보장할 수 없음 
+    - @Cron()은 내부적으로 비동기 작업을 트리거하지만, NestJS는 해당 작업이 완료될 때까지 자동으로 대기하지 않음
+    - 따라서 별도의 작업 추적 로직과 Promise 기반 상태 관리가 필요
+    - 이를 위해 BaseBatchService를 설계하여 작업 실행 및 종료 대기 처리를 통합적으로 관리
+  - 결과적으로, 비동기 작업이 완료되기 전에는 애플리케이션이 완전히 종료되지 않으며, 종료 로직 내 로그를 통해 진행 상태를 명확히 확인할 수 있음

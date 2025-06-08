@@ -2,9 +2,7 @@ import { ConflictException, Injectable, InternalServerErrorException } from '@ne
 import Redlock, { Lock } from 'redlock';
 import { DiscoveryService, MetadataScanner, Reflector } from '@nestjs/core';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
-import { REDIS_LOCK_METADATA } from '../decorator/redis-lock.decorator';
-import { RedisLockKeyEnum } from '../enum/redis-lock-key.enum';
-import { REDIS_LOCK_PREFIX } from '../constant/redis-lock.constant';
+import { REDIS_LOCK_METADATA, REDIS_LOCK_PREFIX } from '../constant/redis-lock.constant';
 
 @Injectable()
 export class RedisLockManagerService {
@@ -39,7 +37,7 @@ export class RedisLockManagerService {
 
     private wrapMethodWithRedisLock(instance: any, prototype: object, methodName: string): void {
         const methodRef = prototype[methodName];
-        const meta = this.reflector.get<{ key: RedisLockKeyEnum; ttl: number }>(REDIS_LOCK_METADATA, methodRef);
+        const meta = this.reflector.get<{ key: string; ttl: number }>(REDIS_LOCK_METADATA, methodRef);
 
         if (!meta) return;
 
@@ -62,18 +60,17 @@ export class RedisLockManagerService {
         instance[methodName] = wrapped;
     }
 
-    private buildRedisLockKey(key: RedisLockKeyEnum): string {
+    private buildRedisLockKey(key: string): string {
         return `${REDIS_LOCK_PREFIX}:${key}`;
     }
 
-    async runTaskWithLock(key: RedisLockKeyEnum, ttl: number, task: () => Promise<void>): Promise<void> {
+    async runTaskWithLock(key: string, ttl: number, task: () => Promise<void>): Promise<void> {
         let lock: Lock;
 
         try {
             lock = await this.redLock.acquire([this.buildRedisLockKey(key)], ttl);
             await task();
         } catch (error) {
-            console.error(error);
             throw new InternalServerErrorException(
                 `An error occurred while executing the Redis-locked task for key "${key}"`
             );

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { GetSampleQuery } from '../repository/query/get-sample.query';
-import { RedisLockKeyEnum } from '../../common/redis/lock/enum/redis-lock-key.enum';
 import { ShutdownHandler } from '../../core/lifecycle/handler/shutdown.handler';
 import { BaseBatchService } from '../../core/lifecycle/abstract/base-batch-service.abstract';
 import { RedisLock } from '../../common/redis/lock/decorator/redis-lock.decorator';
@@ -15,7 +14,7 @@ export class SampleService extends BaseBatchService {
         super(shutdownHandler);
     }
 
-    @RedisLock(RedisLockKeyEnum.SAMPLE_JOB, 1000 * 21)
+    @RedisLock({ ttl: 1000 * 21 })
     protected async executeLogic(): Promise<void> {
         const nowDate = () => new Date().toISOString();
         console.log('[SampleService] 작업 시작:', nowDate());
